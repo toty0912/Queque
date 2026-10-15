@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Simulador DT - Torneo 7mo Grado CABA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #090d16; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.02); }
+        }
+        .var-anim { animation: pulseGlow 1.2s infinite; }
+        @keyframes goalPop {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .goal-card { animation: goalPop 0.4s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-full flex flex-col overflow-x-hidden">
+
+    <!-- MODAL INICIAL DE CONFIGURACIÓN DEL DT -->
+    <div id="modal-dt-setup" class="fixed inset-0 bg-slate-950/95 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-2xl text-3xl mb-3 border border-emerald-500/20 shadow-inner">
+                    🏆
+                </div>
+                <h1 class="text-2xl font-black uppercase tracking-wide bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+                    Torneo 7° Grado CABA
+                </h1>
+                <p class="text-xs text-slate-400 mt-1 font-medium">Simulador Técnico & Táctico Escolar</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Nombre DT</label>
+                        <input type="text" id="dt-firstname" value="Profe" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Apellido DT</label>
+                        <input type="text" id="dt-lastname" value="Gómez" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 font-medium">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Colegio / División a Dirigir</label>
+                    <select id="select-user-team" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 font-bold">
+                        <option value="7B Perpetuo" selected>7°B Perpetuo (N. S. del Perpetuo Socorro)</option>
+                        <option value="7A Perpetuo">7°A Perpetuo (El Clásico Rival)</option>
+                        <option value="Inst. Mariano Moreno">Instituto Mariano Moreno</option>
+                        <option value="Belgrano Day School">Belgrano Day School</option>
+                        <option value="Escuela Normal N°1">Escuela Normal N°1</option>
+                        <option value="San Martín de Tours">San Martín de Tours</option>
+                        <option value="Lenguas Vivas">Lenguas Vivas</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="confirmDTSetup()" class="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-950 font-black py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95 uppercase tracking-wider text-xs flex items-center justify-center space-x-2">
+                <span>⚽ Iniciar Carrera DT</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- CABECERA PRINCIPAL -->
+    <header class="bg-slate-900 border-b border-slate-800 px-3 py-2.5 shrink-0 z-25">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div class="flex items-center space-x-2.5 w-full sm:w-auto justify-between sm:justify-start">
+                <div class="flex items-center space-x-2">
+                    <div class="bg-emerald-500 text-slate-950 p-1.5 rounded-xl font-black text-lg shadow-lg flex items-center justify-center w-8 h-8">⚽</div>
+                    <div>
+                        <h1 class="font-black text-xs uppercase tracking-wider bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Liga Escolar 7mo CABA</h1>
+                        <p class="text-[10px] text-slate-400">DT: <span id="hdr-dt-fullname" class="text-slate-200 font-bold">Profe Gómez</span> | <span id="hdr-user-team" class="text-emerald-400 font-bold">7°B Perpetuo</span></p>
+                    </div>
+                </div>
+                <button onclick="toggleAudio()" id="btn-audio" class="sm:hidden bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg text-[10px] font-bold text-slate-300">
+                    🔊 Audio
+                </button>
+            </div>
+
+            <!-- NAVEGACIÓN -->
+            <div id="main-nav" class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px] font-bold w-full sm:w-auto justify-around sm:justify-start">
+                <button onclick="switchView('calendar')" id="nav-calendar" class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black shadow transition text-center">📅 Calendario</button>
+                <button onclick="switchView('vestuario')" id="nav-vestuario" class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition text-center">🗣️ Vestuario</button>
+                <button onclick="switchView('match')" id="nav-match" class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1">
+                    <span>⚽ Partido</span>
+                    <span id="badge-live" class="hidden w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                </button>
+            </div>
+
+            <div class="hidden sm:flex items-center space-x-2">
+                <button onclick="toggleAudio()" id="btn-audio-desktop" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 transition">
+                    🔊 Audio
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENEDOR DE VISTAS -->
+    <main class="flex-1 max-w-6xl w-full mx-auto flex flex-col overflow-hidden p-2.5 sm:p-3 relative">
+
+        <!-- VISTA 1: CALENDARIO Y TABLA DE POSICIONES -->
+        <section id="view-calendar" class="flex-1 bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl flex flex-col md:flex-row overflow-hidden shadow-xl">
+            <!-- PANEL IZQUIERDO: FECHA Y RIVAL -->
+            <div class="w-full md:w-1/2 p-4 sm:p-5 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col justify-between space-y-4 overflow-y-auto custom-scrollbar">
+                <div>
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <span class="text-[11px] sm:text-xs font-black uppercase text-emerald-400 tracking-wider">Fixture del Torneo</span>
+                        <span id="cal-date-display" class="font-mono text-[11px] sm:text-xs font-bold bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700">Fecha 1 de 12</span>
+                    </div>
+
+                    <!-- TARJETA DEL PRÓXIMO PARTIDO -->
+                    <div class="bg-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-3 sm:space-y-4 shadow-inner">
+                        <div class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center" id="match-label-title">Próxima Fecha</div>
+                        <div class="flex items-center justify-around py-1 sm:py-2">
+                            <div class="text-center space-y-1 w-1/3">
+                                <div id="cal-home-name" class="text-xs sm:text-sm font-black text-emerald-400 uppercase truncate">7°B Perpetuo</div>
+                                <div class="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase">Local</div>
+                            </div>
+                            <div class="text-lg sm:text-xl font-black text-slate-600">VS</div>
+                            <div class="text-center space-y-1 w-1/3">
+                                <div id="cal-away-name" class="text-xs sm:text-sm font-black text-cyan-400 uppercase truncate">7°A Perpetuo</div>
+                                <div class="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase">Visitante</div>
+                            </div>
+                        </div>
+
+                        <div id="cal-derby-badge" class="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-bold p-2.5 rounded-xl text-center flex items-center justify-center space-x-1">
+                            <span>🔥</span> <span class="truncate">SUPERCLÁSICO DE PERPETUO SOCORRO</span> <span>🔥</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2.5 pt-2">
+                    <button onclick="advanceCalendarDay()" id="btn-advance-day" class="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-950 font-black py-3 sm:py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95 uppercase tracking-wider text-[11px] sm:text-xs flex items-center justify-center space-x-2">
+                        <span>⏭️ Siguiente Fecha / Partido</span>
+                    </button>
+                    <button onclick="goToMatchFromCalendar()" id="btn-start-match-cal" class="hidden w-full bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-slate-950 font-black py-3 sm:py-3.5 px-4 rounded-xl shadow-lg transition transform active:scale-95 uppercase tracking-wider text-[11px] sm:text-xs flex items-center justify-center space-x-2 animate-bounce">
+                        <span>🚨 ¡IR A CHARLA DE VESTUARIO!</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL DERECHO: TABLA DE POSICIONES -->
+            <div class="w-full md:w-1/2 p-3 sm:p-5 flex flex-col overflow-y-auto custom-scrollbar space-y-3">
+                <h3 class="text-[11px] sm:text-xs font-black uppercase text-slate-300 tracking-wider">Tabla de Posiciones - CABA</h3>
+                <div class="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden text-[11px] sm:text-xs">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-900 text-slate-400 uppercase text-[9px] border-b border-slate-800">
+                            <tr>
+                                <th class="p-2">Pos</th>
+                                <th class="p-2">Equipo</th>
+                                <th class="p-2 text-center">PJ</th>
+                                <th class="p-2 text-center">PG</th>
+                                <th class="p-2 text-center">PE</th>
+                                <th class="p-2 text-center">PP</th>
+                                <th class="p-2 text-center">GF</th>
+                                <th class="p-2 text-center">GC</th>
+                                <th class="p-2 text-center">DIF</th>
+                                <th class="p-2 text-center font-bold text-emerald-400">PTS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-standings-body" class="divide-y divide-slate-800/50">
+                            <!-- Inyectado dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA 2: CHARLA DE VESTUARIO -->
+        <section id="view-vestuario" class="hidden flex-1 bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl flex flex-col md:flex-row overflow-hidden shadow-xl">
+            <!-- LISTA DE JUGADORES PARA CHARLA -->
+            <div class="w-full md:w-80 border-b md:border-b-0 md:border-r border-slate-800 p-3 sm:p-4 flex flex-col space-y-2.5 shrink-0 max-h-48 md:max-h-none overflow-y-auto custom-scrollbar">
+                <div class="flex items-center space-x-2 mb-1">
+                    <span class="text-lg sm:text-xl">🚪</span>
+                    <h2 class="text-[11px] sm:text-xs font-black uppercase text-slate-200 tracking-wider">Charla de Vestuario</h2>
+                </div>
+                <p class="text-[10px] sm:text-[11px] text-slate-400">Instruí a los referentes para elevar la moral:</p>
+                <div id="vestuario-players-list" class="flex-1 overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
+                    <!-- Inyectado dinámicamente -->
+                </div>
+            </div>
+
+            <!-- VENTANA DE INTERACCIÓN DE CHAT -->
+            <div class="flex-1 flex flex-col bg-slate-950 p-3 sm:p-4 justify-between overflow-hidden">
+                <div id="chat-header" class="pb-2.5 sm:pb-3 border-b border-slate-800 flex items-center space-x-3">
+                    <div id="chat-avatar" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-black text-base sm:text-lg flex items-center justify-center">
+                        🧤
+                    </div>
+                    <div>
+                        <h3 id="chat-player-name" class="text-xs sm:text-sm font-black text-white">Noto (PO)</h3>
+                        <p id="chat-player-status" class="text-[10px] sm:text-[11px] text-emerald-400">Moral: Alta 🔥 | Estado: Enfocado</p>
+                    </div>
+                </div>
+
+                <!-- HISTORIAL DE MENSAJES -->
+                <div id="chat-messages" class="flex-1 overflow-y-auto custom-scrollbar my-3 space-y-2.5 p-2">
+                    <!-- Diálogo dinámico -->
+                </div>
+
+                <!-- OPCIONES DE RESPUESTA DT -->
+                <div id="chat-options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                    <!-- Opciones dinámicas -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA 3: SIMULACIÓN DE PARTIDO -->
+        <section id="view-match" class="hidden flex-1 flex flex-col md:flex-row gap-2.5 sm:gap-3 overflow-hidden">
+            <!-- PANEL IZQUIERDO: TÁCTICAS Y PLANTEL -->
+            <aside class="w-full md:w-80 bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl flex flex-col shrink-0 overflow-hidden shadow-xl max-h-48 md:max-h-none">
+                <div class="flex border-b border-slate-800 bg-slate-950/60 text-[11px]">
+                    <button onclick="switchMatchTab('roster')" id="mtab-roster" class="flex-1 py-2.5 font-bold uppercase text-emerald-400 border-b-2 border-emerald-500 bg-slate-950">Titulares</button>
+                    <button onclick="switchMatchTab('subs')" id="mtab-subs" class="flex-1 py-2.5 font-bold uppercase text-slate-400 border-b-2 border-transparent hover:text-slate-200">Suplentes</button>
+                    <button onclick="switchMatchTab('tactics')" id="mtab-tactics" class="flex-1 py-2.5 font-bold uppercase text-slate-400 border-b-2 border-transparent hover:text-slate-200">Táctica</button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-2.5 sm:p-3 space-y-2.5">
+                    <!-- PESTAÑA TITULARES -->
+                    <div id="msec-roster" class="space-y-2">
+                        <div class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex justify-between">
+                            <span>Formación Inicial</span>
+                            <span id="txt-formation-label" class="text-emerald-400 font-black">4-3-3</span>
+                        </div>
+                        <div id="roster-starters" class="space-y-1.5"></div>
+                    </div>
+
+                    <!-- PESTAÑA SUPLENTES -->
+                    <div id="msec-subs" class="space-y-2 hidden">
+                        <p class="text-[10px] sm:text-[11px] text-slate-400 mb-1">Elegí un suplente y luego toca al titular:</p>
+                        <div id="roster-subs" class="space-y-1.5"></div>
+                    </div>
+
+                    <!-- PESTAÑA TÁCTICAS -->
+                    <div id="msec-tactics" class="space-y-3 hidden">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Postura Táctica</label>
+                            <div class="grid grid-cols-3 gap-1.5 text-xs">
+                                <button onclick="setMentality('defensive')" id="btn-m-def" class="py-2 bg-slate-800 border border-slate-700 rounded-xl font-bold text-slate-300">Defensiva</button>
+                                <button onclick="setMentality('balanced')" id="btn-m-bal" class="py-2 bg-emerald-600 border border-emerald-500 rounded-xl font-bold text-white shadow-md">Equilibrada</button>
+                                <button onclick="setMentality('offensive')" id="btn-m-off" class="py-2 bg-slate-800 border border-slate-700 rounded-xl font-bold text-slate-300">Ofensiva</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-1.5 text-xs">
+                            <div class="text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1">Estadísticas del Partido</div>
+                            <div class="flex justify-between text-slate-400">
+                                <span>Remates (Al Arco):</span>
+                                <span id="stat-shots" class="font-bold text-white">0 (0) - 0 (0)</span>
+                            </div>
+                            <div class="flex justify-between text-slate-400">
+                                <span>Córners:</span>
+                                <span id="stat-corners" class="font-bold text-white">0 - 0</span>
+                            </div>
+                            <div class="flex justify-between text-slate-400">
+                                <span>Faltas Cometidas:</span>
+                                <span id="stat-fouls" class="font-bold text-white">0 - 0</span>
+                            </div>
+                            <div class="flex justify-between text-slate-400">
+                                <span>Revisiones VAR:</span>
+                                <span id="stat-var" class="font-bold text-white">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- PANEL DERECHO: MARCADOR Y CONSOLA DE INCIDENCIAS -->
+            <section class="flex-1 bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl flex flex-col overflow-hidden shadow-xl">
+                <!-- MARCADOR -->
+                <div class="px-4 py-2.5 border-b border-slate-800 bg-slate-950/90 flex items-center justify-between gap-2">
+                    <div class="flex items-center space-x-2 sm:space-x-3">
+                        <div class="text-right">
+                            <div id="hdr-home-team" class="text-xs sm:text-sm font-black text-emerald-400 uppercase truncate max-w-[100px] sm:max-w-none">7°B Perpetuo</div>
+                        </div>
+                        <div id="hdr-score" class="text-xl sm:text-2xl font-black text-white px-3 py-0.5 bg-slate-900 rounded-xl border border-slate-700 font-mono shadow-inner">0 - 0</div>
+                        <div class="text-left">
+                            <div id="hdr-away-team" class="text-xs sm:text-sm font-black text-cyan-400 uppercase truncate max-w-[100px] sm:max-w-none">7°A Perpetuo</div>
+                        </div>
+                    </div>
+
+                    <div class="text-center font-mono shrink-0">
+                        <div id="hdr-clock" class="text-emerald-400 font-black text-xl sm:text-2xl leading-none">00'</div>
+                        <div id="hdr-period" class="text-[8px] sm:text-[9px] text-slate-400 font-sans uppercase font-bold tracking-widest">1° T</div>
+                    </div>
+                </div>
+
+                <!-- ALIMENTADOR DE INCIDENCIAS MINUTO A MINUTO -->
+                <div id="incidents-feed" class="flex-1 p-3 sm:p-4 overflow-y-auto custom-scrollbar space-y-2 bg-slate-950/60">
+                    <div class="text-center py-12 text-slate-500 text-xs italic">
+                        Realizá la charla de vestuario y presiona "Iniciar Partido" para que ruede la pelota.
+                    </div>
+                </div>
+
+                <!-- BARRA DE CONTROL DEL PARTIDO -->
+                <div class="p-2.5 sm:p-3 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+                    <button onclick="startOrPauseMatch()" id="btn-match-start" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs shadow transition flex items-center space-x-1.5">
+                        <span id="icon-pause">▶️</span> <span id="txt-pause">Iniciar Partido</span>
+                    </button>
+
+                    <div class="text-[11px] sm:text-xs font-semibold text-slate-400 text-right truncate max-w-[150px] sm:max-w-none">
+                        <span id="txt-status-phase" class="text-emerald-400 font-bold">Esperando Pitazo</span>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+    </main>
+
+    <!-- MOTOR LÓGICO DEL JUEGO -->
+    <script>
+        // --- SINTETIZADOR DE AUDIO Y EFECTOS ---
+        let audioCtx = null;
+        let audioMuted = false;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playSound(type) {
+            if (audioMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'whistle') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(2400, now);
+                osc.frequency.setValueAtTime(2900, now + 0.12);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'goal') {
+                [261, 329, 392, 523, 659].forEach((f, i) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.type = 'triangle';
+                    o.frequency.setValueAtTime(f, now + i * 0.07);
+                    o.connect(g);
+                    g.connect(audioCtx.destination);
+                    g.gain.setValueAtTime(0.25, now + i * 0.07);
+                    g.gain.exponentialRampToValueAtTime(0.01, now + 0.85);
+                    o.start(now + i * 0.07);
+                    o.stop(now + 0.85);
+                });
+            } else if (type === 'save') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(70, now + 0.18);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            } else if (type === 'var') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(850, now);
+                osc.frequency.setValueAtTime(620, now + 0.2);
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+                osc.start(now);
+                osc.stop(now + 0.45);
+            }
+        }
+
+        function toggleAudio() {
+            audioMuted = !audioMuted;
+            const txt = audioMuted ? '🔇 Audio' : '🔊 Audio';
+            document.getElementById('btn-audio').textContent = txt;
+            if(document.getElementById('btn-audio-desktop')) {
+                document.getElementById('btn-audio-desktop').textContent = txt;
+            }
+        }
+
+        // --- PLANTILLAS OFICIALES EXACTAS ---
+        const TEAMS = {
+            "7B Perpetuo": {
+                starters: [
+                    { id: 1, name: "Noto", pos: "PO", role: "GK", morale: "Alta", energy: 100, icon: "🧤" },
+                    { id: 2, name: "Fede", pos: "LI", role: "DEF", morale: "Normal", energy: 100, icon: "🛡️" },
+                    { id: 3, name: "Santoni", pos: "DFC", role: "DEF", morale: "Alta", energy: 100, icon: "🧱" },
+                    { id: 4, name: "Gaddi", pos: "DFC", role: "DEF", morale: "Normal", energy: 100, icon: "🧱" },
+                    { id: 5, name: "Bastian", pos: "LD", role: "DEF", morale: "Alta", energy: 100, icon: "🏃" },
+                    { id: 6, name: "Gallo", pos: "MCD", role: "MED", morale: "Alta", energy: 100, icon: "⚓" },
+                    { id: 7, name: "Joaquín", pos: "MC", role: "MED", morale: "Normal", energy: 100, icon: "🎯" },
+                    { id: 8, name: "Eze", pos: "MC", role: "MED", morale: "Normal", energy: 100, icon: "⚙️" },
+                    { id: 9, name: "Pessalache", pos: "ED", role: "DEL", morale: "Alta", energy: 100, icon: "⚡" },
+                    { id: 10, name: "García", pos: "EI", role: "DEL", morale: "Normal", energy: 100, icon: "🎨" },
+                    { id: 11, name: "Crisafi", pos: "DC", role: "DEL", morale: "Alta", energy: 100, icon: "🔥" }
+                ],
+                subs: [
+                    { id: 12, name: "Lucas", pos: "PO", role: "GK", morale: "Normal", energy: 100, icon: "🧤" },
+                    { id: 13, name: "Renata", pos: "DC", role: "DEL", morale: "Alta", energy: 100, icon: "⚽" },
+                    { id: 14, name: "Juana", pos: "LI/MC", role: "MED", morale: "Alta", energy: 100, icon: "👟" },
+                    { id: 15, name: "Lolo", pos: "LD", role: "DEF", morale: "Normal", energy: 100, icon: "🛡️" },
+                    { id: 16, name: "Uma", pos: "DFC", role: "DEF", morale: "Alta", energy: 100, icon: "🧱" }
+                ]
+            },
+            "7A Perpetuo": {
+                starters: [
+                    { id: 101, name: "Agustín", pos: "PO", role: "GK", morale: "Normal", energy: 100 },
+                    { id: 102, name: "Benja", pos: "LD", role: "DEF", morale: "Normal", energy: 100 },
+                    { id: 103, name: "Mateo", pos: "DFC", role: "DEF", morale: "Normal", energy: 100 },
+                    { id: 104, name: "Nico", pos: "DFC", role: "DEF", morale: "Normal", energy: 100 },
+                    { id: 105, name: "Santi", pos: "LI", role: "DEF", morale: "Normal", energy: 100 },
+                    { id: 106, name: "Juani", pos: "MCD", role: "MED", morale: "Alta", energy: 100 },
+                    { id: 107, name: "Thiago", pos: "MC", role: "MED", morale: "Normal", energy: 100 },
+                    { id: 108, name: "Manu", pos: "MCO", role: "MED", morale: "Alta", energy: 100 },
+                    { id: 109, name: "Toto", pos: "ED", role: "DEL", morale: "Alta", energy: 100 },
+                    { id: 110, name: "Facu", pos: "EI", role: "DEL", morale: "Alta", energy: 100 },
+                    { id: 111, name: "Prepo", pos: "DC", role: "DEL", morale: "Alta", energy: 100 }
+                ],
+                subs: [
+                    { id: 112, name: "Franco", pos: "PO", role: "GK", morale: "Normal", energy: 100 },
+                    { id: 113, name: "Valentín", pos: "DF", role: "DEF", morale: "Normal", energy: 100 },
+                    { id: 114, name: "Lautaro", pos: "MC", role: "MED", morale: "Normal", energy: 100 },
+                    { id: 115, name: "Bauti", pos: "ED/EI", role: "DEL", morale: "Normal", energy: 100 },
+                    { id: 116, name: "Camilo", pos: "DC", role: "DEL", morale: "Normal", energy: 100 }
+                ]
+            }
+        };
+
+        function getGenericRoster(schoolName) {
+            const names = ["Tomi", "Santi", "Fran", "Nacho", "Lucho", "Bautista", "Mati", "Pedro", "Gabi", "Valen", "Maxi"];
+            const subNames = ["Gonzalo", "Ramiro", "Felipe", "Iñaki", "Bruno"];
+            return {
+                starters: names.map((n, i) => ({
+                    id: 200 + i,
+                    name: n,
+                    pos: i === 0 ? "PO" : i < 5 ? "DEF" : i < 8 ? "MED" : "DEL",
+                    role: i === 0 ? "GK" : i < 5 ? "DEF" : i < 8 ? "MED" : "DEL",
+                    morale: "Normal",
+                    energy: 100
+                })),
+                subs: subNames.map((n, i) => ({
+                    id: 250 + i,
+                    name: n,
+                    pos: "SUPL",
+                    role: "MED",
+                    morale: "Normal",
+                    energy: 100
+                }))
+            };
+        }
+
+        const FIXTURE_OPPONENTS = [
+            "7A Perpetuo", "Inst. Mariano Moreno", "Belgrano Day School",
+            "Escuela Normal N°1", "San Martín de Tours", "Lenguas Vivas",
+            "7A Perpetuo", "Inst. Mariano Moreno", "Belgrano Day School",
+            "Escuela Normal N°1", "San Martín de Tours", "Lenguas Vivas"
+        ];
+
+        // --- ESTADO GLOBAL ---
+        let dtName = "Profe Gómez";
+        let teamHomeName = "7B Perpetuo";
+        let teamAwayName = "7A Perpetuo";
+
+        let currentFecha = 1; 
+        let phaseType = 'regular'; 
+        let matchStarted = false;
+
+        let standings = [
+            { team: "7B Perpetuo", pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0, pts: 0 },
+            { team: "7A Perpetuo", pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0, pts: 0 },
+            { team: "Inst. Mariano Moreno", pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0, pts: 0 },
+            { team: "Belgrano Day School", pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0, pts: 0 },
+            { team: "Escuela Normal N°1", pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0, pts: 0 },
+            { team: "San Martín de Tours", pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0, pts: 0 },
+            { team: "Lenguas Vivas", pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dif: 0, pts: 0 }
+        ];
+
+        let homeStarters = [];
+        let homeSubs = [];
+        let awayStarters = [];
+
+        let currentMentality = "balanced";
+        let scoreHome = 0;
+        let scoreAway = 0;
+
+        const TOTAL_REAL_SECS = 45; // ⏱️ Partido rápido (45s reales)
+        let realSecondsElapsed = 0;
+        let isPaused = true;
+        let halfTimeBreak = false;
+
+        let selectedSubId = null;
+        let activeChatPlayerId = 1; 
+
+        let stats = {
+            shotsHome: 0, shotsHomeOnTarget: 0,
+            shotsAway: 0, shotsAwayOnTarget: 0,
+            cornersHome: 0, cornersAway: 0,
+            foulsHome: 0, foulsAway: 0,
+            varCount: 0
+        };
+
+        let lastIncidentMinute = -15; 
+        let targetGoalCount = 0;
+        let currentGoalsScored = 0;
+
+        const FLOW_TEMPLATES = [
+            "Joaquín controla en el círculo central y distribuye.",
+            "Gallo traba con fuerza limpia en el medio y recupera.",
+            "Fede se proyecta por el lateral izquierdo.",
+            "Santoni y Gaddi ordenan la línea defensiva.",
+            "Bastian cierra a tiempo por derecha y despeja.",
+            "Pessalache encara con velocidad buscando el mano a mano.",
+            "Pelotazo largo buscando el pique de Crisafi.",
+            "Eze combina en corto con Joaquín para romper líneas."
+        ];
+
+        const PLAYER_CHATS = {
+            1: { 
+                greeting: "Profe, el grupo está metidísimo. ¿Alguna indicación para el arco?",
+                options: [
+                    { text: "Noto, transmití tranquilidad desde el fondo.", moraleEffect: "+Moral y Liderazgo", reply: "¡Totalmente Profe! Me pongo el equipo al hombro." },
+                    { text: "Atento con los remates de media distancia.", moraleEffect: "+Concentración", reply: "Entendido Profe. Todo lo que vaya al área es mío." }
+                ]
+            },
+            11: { 
+                greeting: "Profe, me tengo una fe bárbara para meter el gol hoy.",
+                options: [
+                    { text: "Crisafi, buscá la espalda de sus centrales.", moraleEffect: "+Moral 🔥", reply: "¡Vamos! Al primer centro claro la mando a guardar." },
+                    { text: "Jugá de primera y esperá tu momento.", moraleEffect: "+Control Táctico", reply: "Dale Profe, juego para el equipo." }
+                ]
+            }
+        };
+
+        function confirmDTSetup() {
+            const first = document.getElementById('dt-firstname').value.trim() || 'Profe';
+            const last = document.getElementById('dt-lastname').value.trim() || 'Gómez';
+            dtName = `${first} ${last}`;
+            teamHomeName = document.getElementById('select-user-team').value;
+
+            setupMatchForCurrentState();
+
+            document.getElementById('hdr-dt-fullname').textContent = dtName;
+            document.getElementById('hdr-user-team').textContent = teamHomeName;
+            document.getElementById('modal-dt-setup').classList.add('hidden');
+
+            setupTeamData();
+            renderStandings();
+            renderVestuarioList();
+            openPlayerChat(1);
+            updateCalendarUI();
+        }
+
+        function setupMatchForCurrentState() {
+            if (phaseType === 'regular') {
+                let rival = FIXTURE_OPPONENTS[(currentFecha - 1) % FIXTURE_OPPONENTS.length];
+                if (rival === teamHomeName) {
+                    rival = (teamHomeName === "7B Perpetuo") ? "7A Perpetuo" : "7B Perpetuo";
+                }
+                teamAwayName = rival;
+            } else if (phaseType === 'semifinal') {
+                standings.sort((a,b) => b.pts - a.pts || b.dif - a.dif || b.gf - a.gf);
+                teamHomeName = standings[1].team; 
+                teamAwayName = standings[2].team; 
+            } else if (phaseType === 'final') {
+                standings.sort((a,b) => b.pts - a.pts || b.dif - a.dif || b.gf - a.gf);
+                teamHomeName = standings[0].team; 
+                teamAwayName = teamHomeName === standings[1].team ? standings[2].team : standings[1].team; 
+            }
+        }
+
+        function setupTeamData() {
+            const homeData = JSON.parse(JSON.stringify(TEAMS[teamHomeName] || getGenericRoster(teamHomeName)));
+            const awayData = JSON.parse(JSON.stringify(TEAMS[teamAwayName] || getGenericRoster(teamAwayName)));
+
+            homeStarters = homeData.starters;
+            homeSubs = homeData.subs;
+            awayStarters = awayData.starters;
+
+            document.getElementById('hdr-home-team').textContent = teamHomeName;
+            document.getElementById('hdr-away-team').textContent = teamAwayName;
+            document.getElementById('cal-home-name').textContent = teamHomeName;
+            document.getElementById('cal-away-name').textContent = teamAwayName;
+
+            renderRosterUI();
+        }
+
+        function switchView(viewName) {
+            ['calendar', 'vestuario', 'match'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+                document.getElementById(`nav-${v}`).className = "flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition text-center";
+            });
+
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${viewName}`);
+            activeBtn.className = "flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black shadow transition text-center";
+        }
+
+        function advanceCalendarDay() {
+            if (matchStarted) return;
+
+            if (phaseType === 'regular') {
+                currentFecha++;
+                if (currentFecha > 12) {
+                    phaseType = 'semifinal';
+                    alert("🏆 ¡Terminó la fase regular! Se juegan los Play-offs (Semifinal: 2° vs 3°).");
+                }
+            } else if (phaseType === 'semifinal') {
+                phaseType = 'final';
+                alert("🏆 ¡Gran Final! El ganador se enfrenta al 1° de la tabla.");
+            } else if (phaseType === 'final') {
+                phaseType = 'terminado';
+                alert("🏆 ¡Torneo finalizado con éxito!");
+                return;
+            }
+
+            setupMatchForCurrentState();
+            setupTeamData();
+            updateCalendarUI();
+
+            document.getElementById('btn-advance-day').classList.remove('hidden');
+            document.getElementById('btn-start-match-cal').classList.add('hidden');
+            document.getElementById('badge-live').classList.add('hidden');
+        }
+
+        function updateCalendarUI() {
+            let labelText = `Fecha ${currentFecha} de 12`;
+            if (phaseType === 'semifinal') labelText = `Play-offs: Semifinal`;
+            if (phaseType === 'final') labelText = `🏆 Play-offs: GRAN FINAL`;
+            if (phaseType === 'terminado') labelText = `Torneo Concluido`;
+
+            document.getElementById('cal-date-display').textContent = labelText;
+            document.getElementById('match-label-title').textContent = phaseType === 'regular' ? 'Próxima Fecha' : 'Play-off';
+            document.getElementById('cal-home-name').textContent = teamHomeName;
+            document.getElementById('cal-away-name').textContent = teamAwayName;
+
+            if (teamHomeName.includes("Perpetuo") && teamAwayName.includes("Perpetuo")) {
+                document.getElementById('cal-derby-badge').classList.remove('hidden');
+            } else {
+                document.getElementById('cal-derby-badge').classList.add('hidden');
+            }
+        }
+
+        function goToMatchFromCalendar() {
+            switchView('vestuario');
+        }
+
+        function renderStandings() {
+            const tbody = document.getElementById('table-standings-body');
+            standings.sort((a,b) => b.pts - a.pts || b.dif - a.dif || b.gf - a.gf);
+            tbody.innerHTML = standings.map((item, index) => `
+                <tr class="${item.team === teamHomeName ? 'bg-emerald-950/40 text-emerald-300 font-bold' : 'text-slate-300'}">
+                    <td class="p-2 font-mono">${index + 1}°</td>
+                    <td class="p-2 truncate max-w-[100px] sm:max-w-[120px]">${item.team}</td>
+                    <td class="p-2 text-center font-mono">${item.pj}</td>
+                    <td class="p-2 text-center font-mono">${item.pg}</td>
+                    <td class="p-2 text-center font-mono">${item.pe}</td>
+                    <td class="p-2 text-center font-mono">${item.pp}</td>
+                    <td class="p-2 text-center font-mono">${item.gf}</td>
+                    <td class="p-2 text-center font-mono">${item.gc}</td>
+                    <td class="p-2 text-center font-mono">${item.dif > 0 ? '+' + item.dif : item.dif}</td>
+                    <td class="p-2 text-center font-mono font-black text-emerald-400">${item.pts}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderVestuarioList() {
+            const container = document.getElementById('vestuario-players-list');
+            container.innerHTML = homeStarters.map(p => {
+                const chatAvailable = PLAYER_CHATS[p.id];
+                return `
+                    <div onclick="openPlayerChat(${p.id})" class="p-2.5 rounded-xl border ${activeChatPlayerId === p.id ? 'bg-emerald-600/20 border-emerald-500' : 'bg-slate-950 border-slate-800'} cursor-pointer flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span>${p.icon || '👟'}</span>
+                            <div class="truncate">
+                                <div class="text-xs font-bold text-white truncate">${p.name} (${p.pos})</div>
+                                <div class="text-[9px] text-slate-400">Moral: ${p.morale || 'Normal'}</div>
+                            </div>
+                        </div>
+                        ${chatAvailable ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">Charla</span>' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openPlayerChat(playerId) {
+            activeChatPlayerId = playerId;
+            renderVestuarioList();
+
+            const player = homeStarters.find(p => p.id === playerId) || homeStarters[0];
+            const chatData = PLAYER_CHATS[playerId] || {
+                greeting: `Profe, todo el equipo está listo para salir a la cancha.`,
+                options: [
+                    { text: "Entren a jugar con intensidad.", moraleEffect: "+Moral", reply: "¡Excelente Profe! Salimos motivados." },
+                    { text: "Jueguen en equipo y con calma.", moraleEffect: "+Confianza", reply: "Entendido Profe, a dejar todo." }
+                ]
+            };
+
+            document.getElementById('chat-player-name').textContent = `${player.name} (${player.pos})`;
+            document.getElementById('chat-player-status').textContent = `Moral: ${player.morale || 'Alta 🔥'}`;
+            document.getElementById('chat-avatar').textContent = player.icon || '⚽';
+
+            const msgContainer = document.getElementById('chat-messages');
+            msgContainer.innerHTML = `
+                <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-xs text-slate-300">
+                    <span class="font-bold text-emerald-400 block mb-0.5">${player.name}:</span>
+                    "${chatData.greeting}"
+                </div>
+            `;
+
+            const optContainer = document.getElementById('chat-options-container');
+            optContainer.innerHTML = chatData.options.map((opt, i) => `
+                <button onclick="selectChatOption(${playerId}, ${i})" class="bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-left text-xs text-slate-200 space-y-1">
+                    <div class="font-bold text-emerald-400 text-[9px] uppercase">${opt.moraleEffect}</div>
+                    <div>"${opt.text}"</div>
+                </button>
+            `).join('');
+        }
+
+        function selectChatOption(playerId, optionIdx) {
+            const player = homeStarters.find(p => p.id === playerId);
+            const chatData = PLAYER_CHATS[playerId] || { options: [{ reply: "¡Entendido!" }] };
+            const opt = chatData.options[optionIdx];
+
+            player.morale = "Excelente 🔥";
+            renderVestuarioList();
+
+            const msgContainer = document.getElementById('chat-messages');
+            msgContainer.innerHTML += `
+                <div class="bg-emerald-950/60 border border-emerald-500/40 p-2.5 rounded-xl text-xs text-emerald-200 ml-auto text-right">
+                    <span class="font-bold text-emerald-400 block mb-0.5">DT ${dtName}:</span>
+                    "${opt.text}"
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-xs text-slate-300">
+                    <span class="font-bold text-emerald-400 block mb-0.5">${player.name}:</span>
+                    "${opt.reply}"
+                </div>
+            `;
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+        }
+
+        // --- SIMULACIÓN Y CONTROL DEL PARTIDO ---
+        function startOrPauseMatch() {
+            if (!matchStarted) {
+                matchStarted = true;
+                realSecondsElapsed = 0;
+                scoreHome = 0;
+                scoreAway = 0;
+                halfTimeBreak = false;
+
+                targetGoalCount = Math.floor(Math.random() * 3) + 1; 
+                if (Math.random() < 0.15) targetGoalCount = 0; 
+                currentGoalsScored = 0;
+
+                lastIncidentMinute = -15;
+                updateScoreboard();
+
+                stats = {
+                    shotsHome: 0, shotsHomeOnTarget: 0,
+                    shotsAway: 0, shotsAwayOnTarget: 0,
+                    cornersHome: 0, cornersAway: 0,
+                    foulsHome: 0, foulsAway: 0,
+                    varCount: 0
+                };
+                updateStatsUI();
+
+                document.getElementById('incidents-feed').innerHTML = '';
+                playSound('whistle');
+                addTickerMessage('START', `🔔 ¡Comienza el encuentro entre ${teamHomeName} y ${teamAwayName}.`);
+            }
+
+            isPaused = !isPaused;
+            document.getElementById('icon-pause').textContent = isPaused ? '▶️' : '⏸️';
+            document.getElementById('txt-pause').textContent = isPaused ? 'Reanudar' : 'Pausar';
+            document.getElementById('txt-status-phase').textContent = isPaused ? 'Pausado' : 'En Juego';
+        }
+
+        function updateScoreboard() {
+            document.getElementById('hdr-score').textContent = `${scoreHome} - ${scoreAway}`;
+        }
+
+        function updateStatsUI() {
+            document.getElementById('stat-shots').textContent = `${stats.shotsHome} (${stats.shotsHomeOnTarget}) - ${stats.shotsAway} (${stats.shotsAwayOnTarget})`;
+            document.getElementById('stat-corners').textContent = `${stats.cornersHome} - ${stats.cornersAway}`;
+            document.getElementById('stat-fouls').textContent = `${stats.foulsHome} - ${stats.foulsAway}`;
+            document.getElementById('stat-var').textContent = `${stats.varCount}`;
+        }
+
+        function renderRosterUI() {
+            const startersContainer = document.getElementById('roster-starters');
+            const subsContainer = document.getElementById('roster-subs');
+
+            startersContainer.innerHTML = homeStarters.map(p => `
+                <div onclick="selectStarterForSub(${p.id})" class="p-2 bg-slate-800 border border-slate-700 rounded-xl flex items-center justify-between text-xs cursor-pointer">
+                    <div class="flex items-center space-x-2 truncate">
+                        <span class="font-bold text-emerald-400 text-[9px] px-1.5 py-0.5 bg-emerald-950 border border-emerald-800 rounded">${p.pos}</span>
+                        <span class="font-semibold text-slate-200 truncate">${p.name}</span>
+                    </div>
+                    <span class="text-[9px] text-emerald-400 font-mono">${p.morale || 'Alta'}</span>
+                </div>
+            `).join('');
+
+            subsContainer.innerHTML = homeSubs.map(s => `
+                <div onclick="selectSubForSwap(${s.id})" class="${selectedSubId === s.id ? 'bg-emerald-600 border-emerald-400' : 'bg-slate-800 border-slate-700'} p-2 border rounded-xl flex items-center justify-between text-xs cursor-pointer">
+                    <div class="truncate">
+                        <span class="font-bold text-cyan-400 text-[9px] px-1.5 py-0.5 bg-cyan-950 border border-cyan-800 rounded mr-1">${s.pos}</span>
+                        <span class="font-semibold text-white truncate">${s.name}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectSubForSwap(subId) {
+            selectedSubId = subId;
+            renderRosterUI();
+        }
+
+        function selectStarterForSub(starterId) {
+            if (!selectedSubId) return;
+            const starterIdx = homeStarters.findIndex(p => p.id === starterId);
+            const subIdx = homeSubs.findIndex(s => s.id === selectedSubId);
+
+            if (starterIdx !== -1 && subIdx !== -1) {
+                const starter = homeStarters[starterIdx];
+                const sub = homeSubs[subIdx];
+
+                homeStarters[starterIdx] = { ...sub };
+                homeSubs[subIdx] = { ...starter };
+                selectedSubId = null;
+
+                addTickerMessage('SUB', `🔄 Cambio: Ingresa ${sub.name} por ${starter.name}.`);
+                renderRosterUI();
+            }
+        }
+
+        function switchMatchTab(tab) {
+            ['roster', 'subs', 'tactics'].forEach(t => {
+                document.getElementById(`msec-${t}`).classList.add('hidden');
+                document.getElementById(`mtab-${t}`).className = "flex-1 py-2.5 font-bold uppercase text-slate-400 border-b-2 border-transparent";
+            });
+            document.getElementById(`msec-${tab}`).classList.remove('hidden');
+            document.getElementById(`mtab-${tab}`).className = "flex-1 py-2.5 font-bold uppercase text-emerald-400 border-b-2 border-emerald-500 bg-slate-950";
+        }
+
+        function setMentality(m) {
+            currentMentality = m;
+            ['def', 'bal', 'off'].forEach(id => {
+                document.getElementById(`btn-m-${id}`).className = "py-2 bg-slate-800 border border-slate-700 rounded-xl font-bold text-slate-300";
+            });
+            const active = m === 'defensive' ? 'def' : m === 'balanced' ? 'bal' : 'off';
+            document.getElementById(`btn-m-${active}`).className = "py-2 bg-emerald-600 border border-emerald-500 rounded-xl font-bold text-white shadow-md";
+            addTickerMessage('TACTIC', `🗣️ Táctica cambiada a ${m.toUpperCase()}.`);
+        }
+
+        function addTickerMessage(type, text) {
+            const feed = document.getElementById('incidents-feed');
+            const gameMins = Math.min(90, Math.floor((realSecondsElapsed / TOTAL_REAL_SECS) * 90));
+
+            let badgeHtml = '<span class="bg-slate-800 text-slate-400 font-bold px-1.5 py-0.5 rounded text-[9px]">⏱️</span>';
+            let bgStyle = 'bg-slate-900/70 border-slate-800/80';
+
+            if (type === 'GOAL') {
+                badgeHtml = '<span class="bg-emerald-400 text-slate-950 font-black px-1.5 py-0.5 rounded text-[9px]">⚽ GOL</span>';
+                bgStyle = 'bg-emerald-950/90 border-emerald-500/70 goal-card';
+            } else if (type === 'SAVE') {
+                badgeHtml = '<span class="bg-cyan-500 text-slate-950 font-black px-1.5 py-0.5 rounded text-[9px]">🧤 ATAJADA</span>';
+            } else if (type === 'PENALTY') {
+                badgeHtml = '<span class="bg-amber-500 text-slate-950 font-black px-1.5 py-0.5 rounded text-[9px]">🚨 PENAL</span>';
+            }
+
+            const item = document.createElement('div');
+            item.className = `p-2.5 border rounded-xl flex items-start space-x-2 text-xs ${bgStyle}`;
+            item.innerHTML = `
+                <div class="font-mono font-bold text-emerald-400 text-[11px] shrink-0 w-6 pt-0.5">${gameMins}'</div>
+                <div class="flex-1 space-y-0.5">
+                    <div>${badgeHtml}</div>
+                    <div class="text-slate-100 text-[11px] leading-snug">${text}</div>
+                </div>
+            `;
+            feed.prepend(item);
+        }
+
+        let lastTime = performance.now();
+
+        function matchLoop(timestamp) {
+            const dt = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+
+            if (!isPaused && matchStarted && realSecondsElapsed < TOTAL_REAL_SECS) {
+                realSecondsElapsed += dt;
+
+                const gameMins = Math.min(90, Math.floor((realSecondsElapsed / TOTAL_REAL_SECS) * 90));
+                document.getElementById('hdr-clock').textContent = `${gameMins.toString().padStart(2, '0')}'`;
+                document.getElementById('hdr-period').textContent = gameMins < 45 ? "1° T" : "2° T";
+
+                if (realSecondsElapsed >= TOTAL_REAL_SECS / 2 && !halfTimeBreak) {
+                    halfTimeBreak = true;
+                    isPaused = true;
+                    playSound('whistle');
+                    addTickerMessage('START', `🔔 Entretiempo. Parcial: ${teamHomeName} ${scoreHome} - ${scoreAway} ${teamAwayName}.`);
+                    document.getElementById('txt-status-phase').textContent = "Entretiempo";
+                    document.getElementById('icon-pause').textContent = '▶️';
+                    document.getElementById('txt-pause').textContent = 'Reanudar';
+                }
+
+                if (gameMins - lastIncidentMinute >= 7 + Math.floor(Math.random() * 4)) {
+                    lastIncidentMinute = gameMins;
+                    const needGoals = currentGoalsScored < targetGoalCount;
+                    if (needGoals && (Math.random() < 0.45 || gameMins > 70)) {
+                        triggerGoalIncident();
+                    } else {
+                        triggerKeyIncident();
+                    }
+                }
+
+                if (realSecondsElapsed >= TOTAL_REAL_SECS) {
+                    realSecondsElapsed = TOTAL_REAL_SECS;
+                    matchStarted = false;
+                    isPaused = true;
+                    document.getElementById('hdr-clock').textContent = "90'";
+                    document.getElementById('txt-status-phase').textContent = "Finalizado";
+                    playSound('whistle');
+                    addTickerMessage('START', `🏁 Final: ${teamHomeName} ${scoreHome} - ${scoreAway} ${teamAwayName}.`);
+
+                    if ((phaseType === 'semifinal' || phaseType === 'final') && scoreHome === scoreAway) {
+                        addTickerMessage('PENALTY', `⚖️ ¡Empate en eliminación! Tanda de penales.`);
+                        setTimeout(() => { simularTandaDePenales(); }, 1000);
+                    } else {
+                        updateLeagueStandingsAfterMatch();
+                    }
+
+                    document.getElementById('btn-advance-day').classList.remove('hidden');
+                    document.getElementById('btn-start-match-cal').classList.add('hidden');
+                    document.getElementById('badge-live').classList.add('hidden');
+                }
+            }
+
+            requestAnimationFrame(matchLoop);
+        }
+
+        function simularTandaDePenales() {
+            let penHome = 0;
+            let penAway = 0;
+            const spots = ["al ángulo", "al rincón derecho", "al medio", "junto al palo"];
+            const awayNames = ["Juani", "Facu", "Toto", "Prepo", "Manu"];
+
+            addTickerMessage('PENALTY', `🎯 Comienza la tanda de penales.`);
+            let ronda = 0;
+            
+            function ejecutarSiguientePenal() {
+                if (ronda >= 3 && penHome !== penAway) {
+                    finalizarTandaPenales(penHome, penAway);
+                    return;
+                }
+                ronda++;
+                const kickerHome = homeStarters.find(p => p.role === 'DEL') || homeStarters[10];
+                const spotHome = spots[Math.floor(Math.random() * spots.length)];
+                
+                addTickerMessage('PENALTY', `📌 Penal #${ronda}: Patea ${kickerHome.name} (${teamHomeName})...`);
+
+                setTimeout(() => {
+                    const exitoHome = Math.random() < 0.8;
+                    if (exitoHome) {
+                        penHome++;
+                        playSound('goal');
+                        addTickerMessage('GOAL', `⚽ ¡Gol de ${kickerHome.name} ${spotHome}!`);
+                    } else {
+                        playSound('save');
+                        addTickerMessage('SAVE', `❌ ¡Atajado el remate de ${kickerHome.name}!`);
+                    }
+                    updateScoreboardPenales(penHome, penAway);
+
+                    setTimeout(() => {
+                        const kickerAwayName = awayNames[(ronda - 1) % awayNames.length];
+                        const spotAway = spots[Math.floor(Math.random() * spots.length)];
+                        addTickerMessage('PENALTY', `📌 Penal #${ronda}: Patea ${kickerAwayName} (${teamAwayName})...`);
+
+                        setTimeout(() => {
+                            const exitoAway = Math.random() < 0.75;
+                            if (exitoAway) {
+                                penAway++;
+                                playSound('goal');
+                                addTickerMessage('GOAL', `⚽ ¡Gol de ${kickerAwayName} ${spotAway}!`);
+                            } else {
+                                playSound('save');
+                                addTickerMessage('SAVE', `❌ ¡Atajado a ${kickerAwayName}!`);
+                            }
+                            updateScoreboardPenales(penHome, penAway);
+                            setTimeout(() => { ejecutarSiguientePenal(); }, 1000);
+                        }, 3000); // 3s suspenso
+                    }, 800);
+                }, 3000); // 3s suspenso
+            }
+            ejecutarSiguientePenal();
+        }
+
+        function updateScoreboardPenales(pH, pV) {
+            document.getElementById('hdr-score').textContent = `${scoreHome}(${pH}) - ${scoreAway}(${pV})`;
+        }
+
+        function finalizarTandaPenales(pH, pV) {
+            const ganador = pH > pV ? teamHomeName : teamAwayName;
+            addTickerMessage('START', `🏆 Ganador por penales: ${ganador} (${pH}-${pV}).`);
+            alert(`🏆 ¡Definición por penales ganada por ${ganador} (${pH}-${pV})!`);
+            updateLeagueStandingsAfterMatch();
+        }
+
+        function triggerGoalIncident() {
+            const isHome = Math.random() < 0.5;
+            const atkTeam = isHome ? teamHomeName : teamAwayName;
+            const scorer = (isHome ? homeStarters : awayStarters).find(p => p.role === 'DEL') || (isHome ? homeStarters : awayStarters)[10];
+
+            if (isHome) { scoreHome++; stats.shotsHome++; stats.shotsHomeOnTarget++; }
+            else { scoreAway++; stats.shotsAway++; stats.shotsAwayOnTarget++; }
+
+            currentGoalsScored++;
+            updateScoreboard();
+            updateStatsUI();
+            playSound('goal');
+
+            addTickerMessage('GOAL', `¡Gol de ${atkTeam}! Gran definición de ${scorer.name}.`);
+        }
+
+        function triggerKeyIncident() {
+            const isHome = Math.random() < 0.5;
+            const atkTeam = isHome ? teamHomeName : teamAwayName;
+            if (Math.random() < 0.5) {
+                playSound('save');
+                addTickerMessage('SAVE', `¡Espectacular atajada del arquero ante la llegada de ${atkTeam}!`);
+            } else {
+                addTickerMessage('CORNER', `Tiro de esquina a favor de ${atkTeam}. La defensa despeja con lo justo.`);
+            }
+        }
+
+        function updateLeagueStandingsAfterMatch() {
+            if (phaseType === 'regular') {
+                const homeTeamObj = standings.find(s => s.team === teamHomeName);
+                const awayTeamObj = standings.find(s => s.team === teamAwayName);
+
+                if (homeTeamObj && awayTeamObj) {
+                    homeTeamObj.pj++; awayTeamObj.pj++;
+                    homeTeamObj.gf += scoreHome; homeTeamObj.gc += scoreAway;
+                    homeTeamObj.dif = homeTeamObj.gf - homeTeamObj.gc;
+                    awayTeamObj.gf += scoreAway; awayTeamObj.gc += scoreHome;
+                    awayTeamObj.dif = awayTeamObj.gf - awayTeamObj.gc;
+
+                    if (scoreHome > scoreAway) { homeTeamObj.pg++; homeTeamObj.pts += 3; awayTeamObj.pp++; }
+                    else if (scoreAway > scoreHome) { awayTeamObj.pg++; awayTeamObj.pts += 3; homeTeamObj.pp++; }
+                    else { homeTeamObj.pe++; homeTeamObj.pts += 1; awayTeamObj.pe++; awayTeamObj.pts += 1; }
+                }
+
+                standings.forEach(t => {
+                    if (t.team !== teamHomeName && t.team !== teamAwayName) {
+                        t.pj++;
+                        const gl = Math.floor(Math.random() * 3);
+                        const gv = Math.floor(Math.random() * 3);
+                        t.gf += gl; t.gc += gv; t.dif = t.gf - t.gc;
+                        if (gl > gv) { t.pts += 3; t.pg++; }
+                        else if (gl === gv) { t.pts += 1; t.pe++; }
+                        else { t.pp++; }
+                    }
+                });
+            }
+            renderStandings();
+        }
+
+        requestAnimationFrame(matchLoop);
+    </script>
+</body>
+</html>
